@@ -31,6 +31,7 @@ pipeline {
         ARTIFACTS = "build/libs/**"
         DOCKER_REGISTRY = "haribonyam"
         DOCKERHUB_CREDENTIAL = 'dockerhub-token'
+        DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1386574222326763632/GT_6tb5agLjuQkA68Ge0SP31VgR06vD_keD2ChvakXT-6Zcr4aYHVPkufwXFUCB6HokT"
     }
 
     options {
@@ -102,5 +103,26 @@ pipeline {
                 }
             }
         }
+    }
+    post {
+            success {
+                echo '✅ 빌드 성공!'
+                sh """
+                    curl -H "Content-Type: application/json" \
+                         -X POST \
+                         -d '{"content": "✅ *[빌드 성공]*\\n- 프로젝트: ${APP_NAME}\\n- 태그: ${params.TAG}\\n- 이미지: ${DOCKER_IMAGE_NAME}\\n- 빌드 링크: ${BUILD_URL}"}' \
+                         $DISCORD_WEBHOOK
+                """
+            }
+
+            failure {
+                echo '❌ 빌드 실패...'
+                sh """
+                    curl -H "Content-Type: application/json" \
+                         -X POST \
+                         -d '{"content": "❌ *[빌드 실패]*\\n- 프로젝트: ${APP_NAME}\\n- 태그: ${params.TAG}\\n- 빌드 링크: ${BUILD_URL}"}' \
+                         $DISCORD_WEBHOOK
+                """
+            }
     }
 }
